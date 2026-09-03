@@ -1,0 +1,12 @@
+{
+  "name": "graffiti-app",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm --prefix app/server run dev\" \"npm --prefix app/client run dev\"",
+    "dev:server": "npm --prefix app/server run dev",
+    "dev:client": "npm --prefix app/client run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
