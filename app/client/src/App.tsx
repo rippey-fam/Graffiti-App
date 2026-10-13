@@ -1,6 +1,12 @@
-import { useState, useRef } from "react";
+// DEBUG LEARNING MODE: Lazy loading keeps the inspector out of production;
+// Suspense allows normal drawing to render while the diagnostic UI loads.
+import { useState, useRef, lazy, Suspense } from "react";
 import { Stage, Layer, Line } from "react-konva";
 import Konva from "konva";
+// DEBUG LEARNING MODE: These read-only helpers report public event/state data.
+import { DEBUG_ENABLED, debugLog, observePointer } from "./debug/learningMode";
+const LearningInspector = import.meta.env.DEV && DEBUG_ENABLED
+  ? lazy(() => import("./debug/LearningInspector")) : null;
 
 interface LineData {
   tool: "pen" | "eraser";
@@ -33,11 +39,17 @@ export default function App() {
         },
       ]);
     }
+    // DEBUG LEARNING MODE: Observe the application's start ref and the exact
+    // stage coordinates used above; this call does not change drawing logic.
+    if (import.meta.env.DEV && DEBUG_ENABLED) observePointer("down", pos ?? null, isDrawing.current, e.type);
   };
 
   const handleMouseMove = (
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
   ) => {
+    // DEBUG LEARNING MODE: Observe hover as well as drawing movement. Sampling
+    // happens in the helper and never skips the application's drawing updates.
+    if (import.meta.env.DEV && DEBUG_ENABLED) observePointer("move", e.target.getStage()?.getPointerPosition() ?? null, isDrawing.current, e.type);
     if (!isDrawing.current) return;
 
     const stage = e.target.getStage();
@@ -53,8 +65,19 @@ export default function App() {
     });
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
+    // DEBUG LEARNING MODE: Capture whether a stroke actually ended, without
+    // treating an idle mouse-up as creation or completion of an object.
+    const wasDrawing = import.meta.env.DEV && DEBUG_ENABLED && isDrawing.current;
     isDrawing.current = false;
+    // DEBUG LEARNING MODE: The endpoint comes from committed drawing data, not
+    // the release pointer (the normal app adds points only during movement).
+    if (import.meta.env.DEV && DEBUG_ENABLED) {
+      observePointer("up", stageRef.current?.getPointerPosition() ?? null, isDrawing.current, e.type);
+      if (wasDrawing) debugLog("CANVAS", "Completed line coordinates", {
+        points: lines.at(-1)?.points ?? null,
+      });
+    }
   };
 
   const handleClear = () => {
@@ -130,6 +153,9 @@ export default function App() {
         onTouchStart={handleMouseDown}
         onTouchMove={handleMouseMove}
         onTouchEnd={handleMouseUp}
+        // DEBUG LEARNING MODE: Leaving only observes the existing drawing ref.
+        // It deliberately does not end strokes or add an endpoint.
+        onPointerLeave={import.meta.env.DEV && DEBUG_ENABLED ? (e) => observePointer("leave", null, isDrawing.current, e.type) : undefined}
         ref={stageRef}
       >
         <Layer>
@@ -149,6 +175,11 @@ export default function App() {
           ))}
         </Layer>
       </Stage>
+      {/* DEBUG LEARNING MODE: Pass existing committed state to a read-only
+          observer. No additional drawing state is introduced in App. */}
+      {LearningInspector && <Suspense fallback={null}>
+        <LearningInspector tool={tool} lines={lines} />
+      </Suspense>}
     </div>
   );
 }

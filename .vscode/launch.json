@@ -1,0 +1,23 @@
+{
+  // DEBUG LEARNING MODE: Launch browser-side debugging after starting Vite.
+  // This JSONC file uses comments supported by VS Code launch configuration.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Graffiti: debug Vite in Edge",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/app/client",
+      "sourceMaps": true
+    },
+    {
+      "name": "Graffiti: debug Vite in Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/app/client",
+      "sourceMaps": true
+    }
+  ]
+}
