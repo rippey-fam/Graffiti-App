@@ -3,6 +3,7 @@
 import { useState, useRef, lazy, Suspense } from "react";
 import { Stage, Layer, Line } from "react-konva";
 import Konva from "konva";
+import ToolDropdown from "./components/ToolDropdown";
 // DEBUG LEARNING MODE: These read-only helpers report public event/state data.
 import { DEBUG_ENABLED, debugLog, observePointer } from "./debug/learningMode";
 const LearningInspector = import.meta.env.DEV && DEBUG_ENABLED
@@ -99,18 +100,14 @@ export default function App() {
     <div className="canvas-container">
       {/* Floating Toolbar */}
       <div className="toolbar">
-        <button
-          className={`tool-btn ${tool === "pen" ? "active" : ""}`}
-          onClick={() => setTool("pen")}
-        >
-          Brush
-        </button>
-        <button
-          className={`tool-btn ${tool === "eraser" ? "active" : ""}`}
-          onClick={() => setTool("eraser")}
-        >
-          Eraser
-        </button>
+        <ToolDropdown
+          options={[
+            { value: "pen", label: "Brush" },
+            { value: "eraser", label: "Eraser" },
+          ]}
+          value={tool}
+          onChange={setTool}
+        />
 
         <div className="divider" />
 
